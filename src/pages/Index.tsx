@@ -12,6 +12,13 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface Product {
   id: number;
@@ -101,6 +108,7 @@ const Index = () => {
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 150000]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const materials = ['Дерево', 'Ткань', 'Кожа', 'МДФ', 'Металл'];
   const colors = ['Фиолетовый', 'Оранжевый', 'Серый', 'Белый', 'Черный'];
@@ -360,8 +368,9 @@ const Index = () => {
                 {filteredProducts.map((product, index) => (
                   <Card
                     key={product.id}
-                    className="group hover:shadow-xl transition-all duration-300 animate-scale-in overflow-hidden"
+                    className="group hover:shadow-xl transition-all duration-300 animate-scale-in overflow-hidden cursor-pointer"
                     style={{ animationDelay: `${index * 100}ms` }}
+                    onClick={() => setSelectedProduct(product)}
                   >
                     <div className="relative overflow-hidden">
                       <img
@@ -383,7 +392,9 @@ const Index = () => {
                         <span className="text-2xl font-bold text-primary">
                           {product.price.toLocaleString()} ₽
                         </span>
-                        <Button size="sm" className="gap-2">
+                        <Button size="sm" className="gap-2" onClick={(e) => {
+                          e.stopPropagation();
+                        }}>
                           <Icon name="ShoppingCart" size={16} />
                           В корзину
                         </Button>
@@ -716,6 +727,109 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedProduct && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold">{selectedProduct.name}</DialogTitle>
+                <DialogDescription>Подробная информация о товаре</DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid md:grid-cols-2 gap-6 mt-4">
+                <div className="space-y-4">
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="w-full h-80 object-cover rounded-lg"
+                  />
+                  <div className="flex gap-2">
+                    <Badge className="bg-secondary text-secondary-foreground">
+                      {selectedProduct.category}
+                    </Badge>
+                    <Badge variant="outline">{selectedProduct.style}</Badge>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <div className="text-3xl font-bold text-primary mb-2">
+                      {selectedProduct.price.toLocaleString()} ₽
+                    </div>
+                    <p className="text-muted-foreground">
+                      Цена указана за единицу товара
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Характеристики</h3>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Материал</p>
+                        <p className="font-medium">{selectedProduct.material}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Цвет</p>
+                        <p className="font-medium">{selectedProduct.color}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Размеры (ДxШxВ)</p>
+                        <p className="font-medium">{selectedProduct.size} см</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Стиль</p>
+                        <p className="font-medium">{selectedProduct.style}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-lg">Описание</h3>
+                    <p className="text-muted-foreground">
+                      Высококачественная мебель от ведущего производителя. 
+                      Изделие изготовлено из натуральных материалов с применением 
+                      современных технологий. Гарантия 2 года.
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon name="Truck" size={18} className="text-primary" />
+                      <span>Бесплатная доставка по Москве</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon name="Shield" size={18} className="text-primary" />
+                      <span>Гарантия 2 года</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon name="Wrench" size={18} className="text-primary" />
+                      <span>Бесплатная сборка</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button className="flex-1 gap-2" size="lg">
+                      <Icon name="ShoppingCart" size={20} />
+                      В корзину
+                    </Button>
+                    <Button variant="outline" size="lg">
+                      <Icon name="Heart" size={20} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
