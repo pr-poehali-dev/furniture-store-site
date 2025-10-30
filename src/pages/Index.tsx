@@ -111,6 +111,11 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [cartItems, setCartItems] = useState<number[]>([]);
+
+  const addToCart = (productId: number) => {
+    setCartItems([...cartItems, productId]);
+  };
 
   const materials = ['Дерево', 'Ткань', 'Кожа', 'МДФ', 'Металл'];
   const colors = ['Фиолетовый', 'Оранжевый', 'Серый', 'Белый', 'Черный'];
@@ -172,14 +177,24 @@ const Index = () => {
               ))}
             </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <Icon name={mobileMenuOpen ? 'X' : 'Menu'} size={24} />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="relative hidden md:flex">
+                <Icon name="ShoppingCart" size={24} />
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-secondary text-secondary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-scale-in">
+                    {cartItems.length}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <Icon name={mobileMenuOpen ? 'X' : 'Menu'} size={24} />
+              </Button>
+            </div>
           </div>
 
           {mobileMenuOpen && (
@@ -420,6 +435,7 @@ const Index = () => {
                         </span>
                         <Button size="sm" className="gap-2" onClick={(e) => {
                           e.stopPropagation();
+                          addToCart(product.id);
                         }}>
                           <Icon name="ShoppingCart" size={16} />
                           В корзину
@@ -842,7 +858,14 @@ const Index = () => {
                   </div>
 
                   <div className="flex gap-3 pt-4">
-                    <Button className="flex-1 gap-2" size="lg">
+                    <Button 
+                      className="flex-1 gap-2" 
+                      size="lg"
+                      onClick={() => {
+                        addToCart(selectedProduct.id);
+                        setSelectedProduct(null);
+                      }}
+                    >
                       <Icon name="ShoppingCart" size={20} />
                       В корзину
                     </Button>
