@@ -112,9 +112,34 @@ const Index = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [cartItems, setCartItems] = useState<number[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const addToCart = (productId: number) => {
     setCartItems([...cartItems, productId]);
+  };
+
+  const removeFromCart = (index: number) => {
+    const newCartItems = [...cartItems];
+    newCartItems.splice(index, 1);
+    setCartItems(newCartItems);
+  };
+
+  const getCartProducts = () => {
+    const productCounts = new Map<number, number>();
+    cartItems.forEach(id => {
+      productCounts.set(id, (productCounts.get(id) || 0) + 1);
+    });
+    return Array.from(productCounts.entries()).map(([id, count]) => ({
+      product: products.find(p => p.id === id)!,
+      count
+    }));
+  };
+
+  const getTotalPrice = () => {
+    return cartItems.reduce((sum, id) => {
+      const product = products.find(p => p.id === id);
+      return sum + (product?.price || 0);
+    }, 0);
   };
 
   const materials = ['Дерево', 'Ткань', 'Кожа', 'МДФ', 'Металл'];
@@ -178,7 +203,12 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="relative hidden md:flex">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative hidden md:flex"
+                onClick={() => setIsCartOpen(true)}
+              >
                 <Icon name="ShoppingCart" size={24} />
                 {cartItems.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-secondary text-secondary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-scale-in">
@@ -876,6 +906,133 @@ const Index = () => {
                 </div>
               </div>
             </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Icon name="ShoppingCart" size={28} className="text-primary" />
+              Корзина
+            </DialogTitle>
+            <DialogDescription>
+              {cartItems.length === 0 ? 'Ваша корзина пуста' : `Товаров в корзине: ${cartItems.length}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {cartItems.length === 0 ? (
+            <div className="py-12 text-center space-y-4">
+              <div className="w-20 h-20 mx-auto bg-muted rounded-full flex items-center justify-center">
+                <Icon name="ShoppingCart" size={40} className="text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground">Добавьте товары из каталога</p>
+              <Button onClick={() => {
+                setIsCartOpen(false);
+                scrollToSection('catalog');
+              }}>
+                Перейти в каталог
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6 mt-4">
+              <div className="space-y-4">
+                {getCartProducts().map(({ product, count }, idx) => (
+                  <Card key={`${product.id}-${idx}`}>
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-24 h-24 object-cover rounded-lg"
+                        />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold">{product.name}</h3>
+                              <p className="text-sm text-muted-foreground">{product.category}</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const index = cartItems.indexOf(product.id);
+                                if (index !== -1) removeFromCart(index);
+                              }}
+                              className="text-muted-foreground hover:text-destructive"
+                            >
+                              <Icon name="Trash2" size={18} />
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  const index = cartItems.indexOf(product.id);
+                                  if (index !== -1) removeFromCart(index);
+                                }}
+                              >
+                                <Icon name="Minus" size={14} />
+                              </Button>
+                              <span className="font-medium w-8 text-center">{count}</span>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => addToCart(product.id)}
+                              >
+                                <Icon name="Plus" size={14} />
+                              </Button>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-lg text-primary">
+                                {(product.price * count).toLocaleString()} ₽
+                              </p>
+                              {count > 1 && (
+                                <p className="text-xs text-muted-foreground">
+                                  {product.price.toLocaleString()} ₽ × {count}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <div className="flex justify-between text-lg">
+                  <span>Количество товаров:</span>
+                  <span className="font-semibold">{cartItems.length} шт.</span>
+                </div>
+                <div className="flex justify-between text-2xl font-bold">
+                  <span>Итого:</span>
+                  <span className="text-primary">{getTotalPrice().toLocaleString()} ₽</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <Button className="w-full gap-2" size="lg">
+                  <Icon name="CreditCard" size={20} />
+                  Оформить заказ
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setIsCartOpen(false)}
+                >
+                  Продолжить покупки
+                </Button>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
