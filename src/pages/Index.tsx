@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 interface Product {
   id: number;
@@ -109,6 +110,7 @@ const Index = () => {
   const [priceRange, setPriceRange] = useState([0, 150000]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const materials = ['Дерево', 'Ткань', 'Кожа', 'МДФ', 'Металл'];
   const colors = ['Фиолетовый', 'Оранжевый', 'Серый', 'Белый', 'Черный'];
@@ -119,7 +121,8 @@ const Index = () => {
     const colorMatch = selectedColors.length === 0 || selectedColors.includes(product.color);
     const styleMatch = selectedStyles.length === 0 || selectedStyles.includes(product.style);
     const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
-    return materialMatch && colorMatch && styleMatch && priceMatch;
+    const searchMatch = searchQuery === '' || product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return materialMatch && colorMatch && styleMatch && priceMatch && searchMatch;
   });
 
   const handleCheckboxChange = (value: string, list: string[], setList: (list: string[]) => void) => {
@@ -360,8 +363,31 @@ const Index = () => {
             </aside>
 
             <div className="lg:col-span-3">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-muted-foreground">Найдено товаров: {filteredProducts.length}</p>
+              <div className="mb-6 space-y-4">
+                <div className="relative">
+                  <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Поиск по названию товара..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-12 text-base"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Icon name="X" size={20} />
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-muted-foreground">Найдено товаров: {filteredProducts.length}</p>
+                  {searchQuery && (
+                    <p className="text-sm text-primary">Поиск: "{searchQuery}"</p>
+                  )}
+                </div>
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
